@@ -31,7 +31,7 @@ const UserTable: React.FC<UserTableProps> = ({
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
+          {users?.map((user) => (
             <tr key={user.id} className={styles.row}>
               <td className={styles.nameCell} onClick={() => onUserClick(user)}>
                 <div className={styles.nameContainer}>

@@ -32,10 +32,15 @@ const UserModal: React.FC<UserModalProps> = ({ user, onClose }) => {
 
   return (
     <div className={styles.overlay} onClick={handleBackdropClick}>
-      <div className={styles.modal}>
+      <div
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+      >
         <div className={styles.header}>
           <div className={styles.headerTitle}>
-            <h2>{user.name}</h2>
+            <h2 id="modal-title">{user.name}</h2>
             <a href={`mailto:${user.email}`} className={styles.emailLink}>
               {user.email}
             </a>
