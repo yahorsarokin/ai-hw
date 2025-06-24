@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import UserTable from "./components/UserTable/UserTable";
 import UserModal from "./components/UserModal/UserModal";
+import SearchBar from "./components/SearchBar/SearchBar";
 import { User } from "./types/User";
 import styles from "./App.module.css";
 
@@ -9,6 +10,7 @@ const App: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchUsers();
@@ -44,6 +46,26 @@ const App: React.FC = () => {
     setUsers(users.filter((user) => user.id !== userId));
   };
 
+  const handleSearchChange = (newSearchTerm: string) => {
+    setSearchTerm(newSearchTerm);
+  };
+
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return users;
+    }
+
+    const searchLower = searchTerm.toLowerCase();
+    return users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(searchLower) ||
+        user.email.toLowerCase().includes(searchLower) ||
+        user.company.name.toLowerCase().includes(searchLower) ||
+        user.username.toLowerCase().includes(searchLower)
+    );
+  }, [users, searchTerm]);
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -63,10 +85,21 @@ const App: React.FC = () => {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1>Users</h1>
+        <h1>User Management</h1>
+        <p className={styles.subtitle}>
+          {filteredUsers?.length || 0} of {users?.length || 0} users
+          {searchTerm && ` matching "${searchTerm}"`}
+        </p>
       </header>
+
+      <SearchBar
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        placeholder="Search by name, email or company..."
+      />
+
       <UserTable
-        users={users}
+        users={filteredUsers}
         onUserClick={handleUserClick}
         onDeleteUser={handleDeleteUser}
       />

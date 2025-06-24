@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { User } from "../../types/User";
+import PostsList from "../PostsList/PostsList";
 import styles from "./UserModal.module.css";
 
 interface UserModalProps {
@@ -102,6 +103,8 @@ const UserModal: React.FC<UserModalProps> = ({ user, onClose }) => {
               </div>
             </div>
           </div>
+
+          <PostsList userId={user.id} />
         </div>
       </div>
     </div>

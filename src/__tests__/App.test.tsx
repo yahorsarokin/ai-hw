@@ -52,7 +52,7 @@ describe("App Integration Tests", () => {
         expect(screen.getByText("Jane Smith")).toBeInTheDocument();
       });
 
-      expect(screen.getByText("Users")).toBeInTheDocument();
+      expect(screen.getByText("User Management")).toBeInTheDocument();
       expect(screen.getByRole("table")).toBeInTheDocument();
     });
 
@@ -294,7 +294,7 @@ describe("App Integration Tests", () => {
       // Should handle gracefully without crashing - check for header
       await waitFor(() => {
         expect(
-          screen.getByRole("heading", { level: 1, name: "Users" })
+          screen.getByRole("heading", { level: 1, name: "User Management" })
         ).toBeInTheDocument();
       });
 
@@ -356,6 +356,123 @@ describe("App Integration Tests", () => {
       // In a real app, there might be a retry button
       // For now, we just verify error state is properly displayed
       expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Search Functionality", () => {
+    beforeEach(async () => {
+      mockFetchSuccess(mockUsers);
+      render(<App />);
+
+      await waitFor(() => {
+        expect(screen.getByText("John Doe")).toBeInTheDocument();
+        expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+      });
+    });
+
+    it("should filter users based on search term", async () => {
+      const user = userEvent.setup();
+
+      // Search for "John"
+      const searchInput = screen.getByRole("textbox");
+      await user.type(searchInput, "John");
+
+      // Should show only John Doe
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
+
+      // Clear search
+      const clearButton = screen.getByRole("button", { name: /clear search/i });
+      await user.click(clearButton);
+
+      // Should show both users again
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    });
+
+    it("should search by email", async () => {
+      const user = userEvent.setup();
+
+      // Search by email
+      const searchInput = screen.getByRole("textbox");
+      await user.type(searchInput, "jane@example.com");
+
+      expect(screen.queryByText("John Doe")).not.toBeInTheDocument();
+      expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    });
+
+    it("should search by company name", async () => {
+      const user = userEvent.setup();
+
+      // Search by company
+      const searchInput = screen.getByRole("textbox");
+      await user.type(searchInput, "Test Company");
+
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
+    });
+
+    it("should search by username", async () => {
+      const user = userEvent.setup();
+
+      // Search by username
+      const searchInput = screen.getByRole("textbox");
+      await user.type(searchInput, "janesmith");
+
+      expect(screen.queryByText("John Doe")).not.toBeInTheDocument();
+      expect(screen.getByText("Jane Smith")).toBeInTheDocument();
+    });
+
+    it("should show user count and search info", async () => {
+      const user = userEvent.setup();
+
+      await waitFor(() => {
+        expect(screen.getByText("2 of 2 users")).toBeInTheDocument();
+      });
+
+      // Search for something
+      const searchInput = screen.getByRole("textbox");
+      await user.type(searchInput, "John");
+
+      expect(
+        screen.getByText('1 of 2 users matching "John"')
+      ).toBeInTheDocument();
+    });
+
+    it("should handle no search results", async () => {
+      const user = userEvent.setup();
+
+      // Search for something that doesn't exist
+      const searchInput = screen.getByRole("textbox");
+      await user.type(searchInput, "NonExistentUser");
+
+      expect(
+        screen.getByText('0 of 2 users matching "NonExistentUser"')
+      ).toBeInTheDocument();
+      expect(screen.queryByText("John Doe")).not.toBeInTheDocument();
+      expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
+    });
+
+    it("should be case insensitive", async () => {
+      const user = userEvent.setup();
+
+      // Search with different cases
+      const searchInput = screen.getByRole("textbox");
+      await user.type(searchInput, "JOHN");
+
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
+    });
+
+    it("should search within partial matches", async () => {
+      const user = userEvent.setup();
+
+      // Search with partial match
+      const searchInput = screen.getByRole("textbox");
+      await user.type(searchInput, "doe");
+
+      expect(screen.getByText("John Doe")).toBeInTheDocument();
+      expect(screen.queryByText("Jane Smith")).not.toBeInTheDocument();
     });
   });
 });
